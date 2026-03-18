@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello world</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+          sans-serif;
+        background-color: #0044cc; /* blue background */
+        color: #ffd700; /* gold text */
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+      }
+      .wrapper {
+        text-align: center;
+        margin-top: 1.5rem;
+      }
+      h1 {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        letter-spacing: -0.02em;
+        margin-bottom: 1.5rem;
+      }
+      .media {
+        margin-bottom: 1.5rem;
+      }
+      .avatar {
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 6px solid #ffd700; /* gold border */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+      .media iframe {
+        border-radius: 20px;
+        border: 4px solid #ffd700;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+      .actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+      }
+      .actions button {
+        padding: 0.6rem 1.4rem;
+        border-radius: 999px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        background-color: #ffd700;
+        color: #0044cc;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      }
+      .actions button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+        background-color: #ffe45c;
+      }
+      .actions button:active {
+        transform: translateY(1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <h1>PurrBox</h1>
+      <div class="media" id="media">
+        <img
+          id="gato-image"
+          src="gato1.jpg"
+          alt="PurrBox cat"
+          class="avatar"
+        />
+      </div>
+      <div class="actions">
+        <button type="button" id="play-purrs">Play Purrs</button>
+        <button type="button" id="next-gato">Next gato</button>
+      </div>
+    </div>
+    <script>
+      const media = document.getElementById("media");
+      const playPurrsBtn = document.getElementById("play-purrs");
+      const nextGatoBtn = document.getElementById("next-gato");
+
+      let currentGato = 1;
+
+      playPurrsBtn.addEventListener("click", () => {
+        if (currentGato === 1) {
+          media.innerHTML = `
+            <iframe
+              src="https://archive.org/embed/ellepurr"
+              width="500"
+              height="30"
+              frameborder="0"
+              webkitallowfullscreen="true"
+              mozallowfullscreen="true"
+              allowfullscreen
+            ></iframe>
+          `;
+        } else {
+          media.innerHTML = `
+            <iframe
+              src="https://archive.org/embed/A63_20150605211205160"
+              width="500"
+              height="30"
+              frameborder="0"
+              webkitallowfullscreen="true"
+              mozallowfullscreen="true"
+              allowfullscreen
+            ></iframe>
+          `;
+        }
+      });
+
+      nextGatoBtn.addEventListener("click", () => {
+        currentGato = currentGato === 1 ? 2 : 1;
+        media.innerHTML = `
+          <img
+            src="gato${currentGato}.jpg"
+            alt="PurrBox cat ${currentGato}"
+            class="avatar"
+          />
+        `;
+      });
+    </script>
+  </body>
+</html>
+
