@@ -3,141 +3,743 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello world</title>
+    <title>PurrBox</title>
     <style>
       :root {
-        color-scheme: light dark;
+        --blue: #0044cc;
+        --gold: #ffd700;
+        --gold-hover: #ffe45c;
+        --text: #ffd700;
       }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
-          sans-serif;
-        background-color: #0044cc; /* blue background */
-        color: #ffd700; /* gold text */
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--blue);
+        color: var(--text);
         display: flex;
         align-items: flex-start;
         justify-content: center;
       }
+
       .wrapper {
         text-align: center;
         margin-top: 1.5rem;
+        padding: 0 1rem;
+        width: 100%;
+        max-width: 600px;
       }
+
       h1 {
         font-size: clamp(2.5rem, 6vw, 4rem);
         letter-spacing: -0.02em;
         margin-bottom: 1.5rem;
       }
-      .media {
+
+      /* Pet profile card */
+      .pet-card {
         margin-bottom: 1.5rem;
-        max-width: 100%;
       }
-      .avatar {
+
+      .avatar-wrap {
+        position: relative;
         width: 220px;
         height: 220px;
+        margin: 0 auto 1rem;
         border-radius: 50%;
-        object-fit: cover;
-        border: 6px solid #ffd700; /* gold border */
+        border: 6px solid var(--gold);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.18);
       }
-      .media iframe {
-        border-radius: 20px;
-        border: 4px solid #ffd700;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        max-width: 100%;
+
+      .avatar-wrap .avatar {
         width: 100%;
-        box-sizing: border-box;
+        height: 100%;
+        margin: 0;
+        border: none;
+        border-radius: 50%;
+        box-shadow: none;
+        object-fit: cover;
+        display: block;
+        vertical-align: middle;
       }
+
+      .avatar-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(90, 90, 90, 0.52);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .avatar-loading-icon {
+        font-size: 1.75rem;
+        line-height: 1;
+        opacity: 0.88;
+        filter: grayscale(0.15);
+        animation: avatar-loading-pulse 1.15s ease-in-out infinite;
+      }
+
+      @keyframes avatar-loading-pulse {
+        0%,
+        100% {
+          opacity: 0.75;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.95;
+          transform: scale(1.06);
+        }
+      }
+
+      .pet-name-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        margin: 0 0 0.25rem;
+        flex-wrap: wrap;
+      }
+
+      .pet-name-row .pet-name {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+
+      .pet-camera {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.2rem;
+        border: none;
+        background: transparent;
+        color: inherit;
+        opacity: 0.42;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: opacity 0.15s ease, background 0.15s ease;
+      }
+
+      .pet-camera:hover {
+        opacity: 0.85;
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .pet-camera:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+        opacity: 0.9;
+      }
+
+      .pet-camera:disabled {
+        opacity: 0.22;
+        cursor: wait;
+      }
+
+      .pet-camera svg {
+        display: block;
+        width: 1.4rem;
+        height: 1.4rem;
+      }
+
+      .pet-species {
+        font-size: 1rem;
+        opacity: 0.75;
+        margin: 0 0 0.25rem;
+      }
+
+      .pet-location {
+        font-size: 0.95rem;
+        opacity: 0.65;
+        margin: 0 0 1rem;
+      }
+
+      .pet-bio {
+        font-size: 1rem;
+        line-height: 1.6;
+        opacity: 0.9;
+        margin: 0 auto 1.5rem;
+        max-width: 420px;
+      }
+
+      /* Loading and empty states */
+      .loading {
+        opacity: 0.6;
+        font-size: 1rem;
+        margin-top: 3rem;
+      }
+
+      .empty {
+        opacity: 0.5;
+        font-size: 1rem;
+        margin-top: 3rem;
+      }
+
+      /* Action buttons */
       .actions {
         display: flex;
         gap: 1rem;
         justify-content: center;
+        flex-wrap: wrap;
       }
+
       .actions button {
-        padding: 0.6rem 1.4rem;
+        flex: 0 0 auto;
+        width: 10.5rem;
+        max-width: 100%;
+        padding: 0.6rem 1rem;
         border-radius: 999px;
         border: none;
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
-        background-color: #ffd700;
-        color: #0044cc;
+        background-color: var(--gold);
+        color: var(--blue);
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
         transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
       }
+
       .actions button:hover {
         transform: translateY(-1px);
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
-        background-color: #ffe45c;
+        background-color: var(--gold-hover);
       }
+
       .actions button:active {
         transform: translateY(1px);
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
       }
+
+      .actions button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .pet-counter {
+        margin: 0.75rem 0 0;
+        font-size: 0.82rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        opacity: 0.55;
+      }
+
+      /* Add Gato — top right */
+      .add-gato {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 50;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        background-color: #6b7280;
+        color: #f9fafb;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        transition: background 0.15s ease, transform 0.12s ease;
+      }
+
+      .add-gato:hover {
+        background-color: #4b5563;
+      }
+
+      .add-gato:active {
+        transform: scale(0.98);
+      }
+
+      /* Modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(4px);
+      }
+
+      .modal-backdrop.is-open {
+        display: flex;
+      }
+
+      .modal-dialog {
+        width: 100%;
+        max-width: 420px;
+        max-height: 90vh;
+        overflow: auto;
+        background: #f3f4f6;
+        color: #111827;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      }
+
+      .modal-dialog h2 {
+        margin: 0 0 1rem;
+        font-size: 1.35rem;
+        font-weight: 700;
+      }
+
+      .modal-field {
+        margin-bottom: 1rem;
+        text-align: left;
+      }
+
+      .modal-field label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        color: #374151;
+      }
+
+      .modal-field input,
+      .modal-field textarea {
+        width: 100%;
+        padding: 0.55rem 0.65rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font: inherit;
+        font-size: 1rem;
+        background: #fff;
+        color: #111827;
+      }
+
+      .modal-field textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
+      .modal-error {
+        color: #b91c1c;
+        font-size: 0.9rem;
+        margin-bottom: 0.75rem;
+        display: none;
+      }
+
+      .modal-error.is-visible {
+        display: block;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1.25rem;
+        flex-wrap: wrap;
+      }
+
+      .modal-actions button {
+        padding: 0.55rem 1.1rem;
+        border-radius: 999px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .modal-actions .btn-cancel {
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      .modal-actions .btn-submit {
+        background: var(--blue);
+        color: var(--gold);
+      }
+
+      .modal-actions .btn-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
-    <div class="wrapper">
-      <h1>PurrBox</h1>
-      <div class="media" id="media">
-        <img
-          id="gato-image"
-          src="gato1.jpg"
-          alt="PurrBox cat"
-          class="avatar"
-        />
-      </div>
-      <div class="actions">
-        <button type="button" id="play-purrs">Play Purrs</button>
-        <button type="button" id="next-gato">Next gato</button>
+    <input
+      type="file"
+      id="pet-photo-input"
+      accept="image/*"
+      capture="environment"
+      hidden
+      aria-hidden="true"
+    />
+
+    <button type="button" class="add-gato" id="add-gato">Add Gato</button>
+
+    <div class="modal-backdrop" id="add-gato-modal" aria-hidden="true" role="dialog" aria-labelledby="add-gato-title">
+      <div class="modal-dialog" role="document">
+        <h2 id="add-gato-title">Add a gato</h2>
+        <p class="modal-error" id="add-gato-error"></p>
+        <form id="add-gato-form">
+          <div class="modal-field">
+            <label for="pet-name">Name</label>
+            <input id="pet-name" name="name" type="text" autocomplete="off" required />
+          </div>
+          <div class="modal-field">
+            <label for="pet-species">Species</label>
+            <input id="pet-species" name="species" type="text" autocomplete="off" />
+          </div>
+          <div class="modal-field">
+            <label for="pet-location">Location</label>
+            <input id="pet-location" name="location" type="text" autocomplete="off" />
+          </div>
+          <div class="modal-field">
+            <label for="pet-bio">Bio</label>
+            <textarea id="pet-bio" name="bio" rows="4"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="add-gato-cancel">Cancel</button>
+            <button type="submit" class="btn-submit" id="add-gato-submit">Save</button>
+          </div>
+        </form>
       </div>
     </div>
-    <script>
-      const media = document.getElementById("media");
-      const playPurrsBtn = document.getElementById("play-purrs");
-      const nextGatoBtn = document.getElementById("next-gato");
 
-      let currentGato = 1;
+    <div class="wrapper">
+      <h1>PurrBox</h1>
 
-      playPurrsBtn.addEventListener("click", () => {
-        if (currentGato === 1) {
-          media.innerHTML = `
-            <iframe
-              src="https://archive.org/embed/ellepurr"
-              width="500"
-              height="30"
-              frameborder="0"
-              webkitallowfullscreen="true"
-              mozallowfullscreen="true"
-              allowfullscreen
-            ></iframe>
-          `;
-        } else {
-          media.innerHTML = `
-            <iframe
-              src="https://archive.org/embed/A63_20150605211205160"
-              width="500"
-              height="30"
-              frameborder="0"
-              webkitallowfullscreen="true"
-              mozallowfullscreen="true"
-              allowfullscreen
-            ></iframe>
-          `;
+      <!-- Pet profile renders here -->
+      <div class="pet-card" id="pet-card">
+        <p class="loading">Loading pets...</p>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="prev-pet" disabled>Previous</button>
+        <button type="button" id="next-pet" disabled>Next</button>
+      </div>
+      <p class="pet-counter" id="pet-counter" aria-live="polite">—</p>
+    </div>
+
+    <script type="module">
+      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+      const supabaseUrl = 'https://ridsdfuiwgaohtvunduy.supabase.co'
+      const supabaseKey = 'sb_publishable_febcmpZdDAB_siaAXKfSfw_TZ8ySws5'
+      const supabase = createClient(supabaseUrl, supabaseKey)
+
+      let pets = []
+      /** @type {Map<string | number, string>} pet id -> first pet_images row URL */
+      let avatarUrlByPetId = new Map()
+      let currentIndex = 0
+      let photoUploadInProgress = false
+
+      const card = document.getElementById('pet-card')
+      const prevBtn = document.getElementById('prev-pet')
+      const nextBtn = document.getElementById('next-pet')
+      const addGatoBtn = document.getElementById('add-gato')
+      const addGatoModal = document.getElementById('add-gato-modal')
+      const addGatoForm = document.getElementById('add-gato-form')
+      const addGatoCancel = document.getElementById('add-gato-cancel')
+      const addGatoError = document.getElementById('add-gato-error')
+      const addGatoSubmit = document.getElementById('add-gato-submit')
+      const petCounter = document.getElementById('pet-counter')
+      const petPhotoInput = document.getElementById('pet-photo-input')
+
+      const PET_IMAGES_BUCKET = 'pets_images'
+
+      const cameraIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`
+
+      function escapeHtml(s) {
+        if (s == null || s === '') return ''
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+      }
+
+      function escapeAttr(s) {
+        return String(s ?? '').replace(/"/g, '&quot;')
+      }
+
+      function openAddGatoModal() {
+        addGatoError.textContent = ''
+        addGatoError.classList.remove('is-visible')
+        addGatoForm.reset()
+        addGatoModal.classList.add('is-open')
+        addGatoModal.setAttribute('aria-hidden', 'false')
+        document.getElementById('pet-name').focus()
+      }
+
+      function closeAddGatoModal() {
+        addGatoModal.classList.remove('is-open')
+        addGatoModal.setAttribute('aria-hidden', 'true')
+      }
+
+      function urlFromPetImageRow(row) {
+        if (!row) return null
+        return (
+          row.url ??
+          row.image_url ??
+          row.public_url ??
+          row.src ??
+          null
+        )
+      }
+
+      function buildAvatarUrlMap(images) {
+        const map = new Map()
+        const byPet = new Map()
+        for (const row of images || []) {
+          if (row.pet_id == null) continue
+          const pid = String(row.pet_id)
+          if (!byPet.has(pid)) byPet.set(pid, [])
+          byPet.get(pid).push(row)
         }
-      });
+        for (const [petId, rows] of byPet) {
+          rows.sort((a, b) => {
+            const ai = a.id ?? 0
+            const bi = b.id ?? 0
+            return ai - bi
+          })
+          const first = rows[0]
+          const u = urlFromPetImageRow(first)
+          if (u) map.set(petId, u)
+        }
+        return map
+      }
 
-      nextGatoBtn.addEventListener("click", () => {
-        currentGato = currentGato === 1 ? 2 : 1;
-        media.innerHTML = `
-          <img
-            src="gato${currentGato}.jpg"
-            alt="PurrBox cat ${currentGato}"
-            class="avatar"
-          />
-        `;
-      });
+      async function loadPets(options = {}) {
+        const { selectLast = false } = options
+
+        const [petsRes, imagesRes] = await Promise.all([
+          supabase.from('pets').select('*'),
+          supabase.from('pet_images').select('*'),
+        ])
+
+        const { data, error } = petsRes
+        if (error) {
+          card.innerHTML = `<p class="empty">Error loading pets: ${escapeHtml(error.message)}</p>`
+          pets = []
+          prevBtn.disabled = true
+          nextBtn.disabled = true
+          petCounter.textContent = '—'
+          return
+        }
+
+        if (!data || data.length === 0) {
+          card.innerHTML = `<p class="empty">No pets yet. Tap Add Gato to create one!</p>`
+          pets = []
+          currentIndex = 0
+          prevBtn.disabled = true
+          nextBtn.disabled = true
+          updateCounter()
+          return
+        }
+
+        if (imagesRes.error) {
+          console.warn('pet_images:', imagesRes.error.message)
+          avatarUrlByPetId = new Map()
+        } else {
+          avatarUrlByPetId = buildAvatarUrlMap(imagesRes.data)
+        }
+
+        pets = data
+        if (selectLast && pets.length > 0) {
+          currentIndex = pets.length - 1
+        } else {
+          currentIndex = Math.min(currentIndex, pets.length - 1)
+          if (currentIndex < 0) currentIndex = 0
+        }
+        renderPet(currentIndex)
+        updateButtons()
+      }
+
+      function avatarSrcForPet(pet) {
+        const fromTable = avatarUrlByPetId.get(String(pet.id))
+        if (fromTable) return fromTable
+        if (pet.image_url) return pet.image_url
+        return 'placeholder.jpg'
+      }
+
+      function renderPet(index) {
+        const pet = pets[index]
+        const src = avatarSrcForPet(pet)
+        const safeAlt = escapeHtml(pet.name)
+        const ariaPhoto = escapeAttr(`Add photo for ${pet.name}`)
+        const loadingOverlay = photoUploadInProgress
+          ? `<div class="avatar-loading" aria-busy="true"><span class="avatar-loading-icon" role="img" aria-label="Loading">⏳</span></div>`
+          : ''
+        const camDisabled = photoUploadInProgress ? ' disabled' : ''
+        card.innerHTML = `
+          <div class="avatar-wrap">
+            <img
+              class="avatar"
+              src="${escapeAttr(src)}"
+              alt="${safeAlt}"
+              onerror="this.src='placeholder.jpg'"
+            />
+            ${loadingOverlay}
+          </div>
+          <div class="pet-name-row">
+            <p class="pet-name">${escapeHtml(pet.name)}</p>
+            <button type="button" class="pet-camera" aria-label="${ariaPhoto}" title="Add photo"${camDisabled}>${cameraIconSvg}</button>
+          </div>
+          <p class="pet-species">${escapeHtml(pet.species || '')}</p>
+          <p class="pet-location">${escapeHtml(pet.location || '')}</p>
+          <p class="pet-bio">${escapeHtml(pet.bio || '')}</p>
+        `
+      }
+
+      function updateButtons() {
+        const hasPets = pets.length > 0
+        const busy = photoUploadInProgress
+        prevBtn.disabled = !hasPets || busy
+        nextBtn.disabled = !hasPets || busy
+        updateCounter()
+      }
+
+      function updateCounter() {
+        const y = pets.length
+        if (y === 0) {
+          petCounter.textContent = '0 of 0 Cats'
+          return
+        }
+        const x = currentIndex + 1
+        petCounter.textContent = `${x} of ${y} Cats`
+      }
+
+      prevBtn.addEventListener('click', () => {
+        if (pets.length === 0) return
+        currentIndex = (currentIndex - 1 + pets.length) % pets.length
+        renderPet(currentIndex)
+        updateButtons()
+      })
+
+      nextBtn.addEventListener('click', () => {
+        if (pets.length === 0) return
+        currentIndex = (currentIndex + 1) % pets.length
+        renderPet(currentIndex)
+        updateButtons()
+      })
+
+      card.addEventListener('click', (e) => {
+        const trigger = e.target.closest('.pet-camera')
+        if (!trigger || trigger.disabled) return
+        e.preventDefault()
+        petPhotoInput.value = ''
+        petPhotoInput.click()
+      })
+
+      petPhotoInput.addEventListener('change', async () => {
+        const file = petPhotoInput.files?.[0]
+        petPhotoInput.value = ''
+        if (!file) return
+        if (!file.type.startsWith('image/')) {
+          alert('Please choose an image file.')
+          return
+        }
+
+        const pet = pets[currentIndex]
+        if (!pet) return
+
+        photoUploadInProgress = true
+        renderPet(currentIndex)
+        updateButtons()
+
+        const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase()
+        const objectPath = `${pet.id}/${crypto.randomUUID()}.${ext}`
+
+        const { error: uploadError } = await supabase.storage.from(PET_IMAGES_BUCKET).upload(objectPath, file, {
+          contentType: file.type || 'image/jpeg',
+          upsert: false,
+        })
+
+        if (uploadError) {
+          photoUploadInProgress = false
+          renderPet(currentIndex)
+          updateButtons()
+          alert(`Upload failed: ${uploadError.message}`)
+          return
+        }
+
+        const { data: urlData } = supabase.storage.from(PET_IMAGES_BUCKET).getPublicUrl(objectPath)
+        const publicUrl = urlData.publicUrl
+
+        const { error: insertError } = await supabase.from('pet_images').insert({
+          pet_id: pet.id,
+          image_url: publicUrl,
+        })
+
+        if (insertError) {
+          photoUploadInProgress = false
+          renderPet(currentIndex)
+          updateButtons()
+          alert(`Could not save image: ${insertError.message}`)
+          return
+        }
+
+        avatarUrlByPetId.set(String(pet.id), publicUrl)
+        photoUploadInProgress = false
+        renderPet(currentIndex)
+        updateButtons()
+      })
+
+      addGatoBtn.addEventListener('click', openAddGatoModal)
+      addGatoCancel.addEventListener('click', closeAddGatoModal)
+
+      addGatoModal.addEventListener('click', (e) => {
+        if (e.target === addGatoModal) closeAddGatoModal()
+      })
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addGatoModal.classList.contains('is-open')) {
+          closeAddGatoModal()
+        }
+      })
+
+      addGatoForm.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        addGatoError.textContent = ''
+        addGatoError.classList.remove('is-visible')
+
+        const name = document.getElementById('pet-name').value.trim()
+        const species = document.getElementById('pet-species').value.trim()
+        const location = document.getElementById('pet-location').value.trim()
+        const bio = document.getElementById('pet-bio').value.trim()
+
+        if (!name) {
+          addGatoError.textContent = 'Please enter a name.'
+          addGatoError.classList.add('is-visible')
+          return
+        }
+
+        addGatoSubmit.disabled = true
+        const { error } = await supabase.from('pets').insert({
+          name,
+          species: species || null,
+          location: location || null,
+          bio: bio || null,
+        })
+
+        addGatoSubmit.disabled = false
+
+        if (error) {
+          addGatoError.textContent = error.message
+          addGatoError.classList.add('is-visible')
+          return
+        }
+
+        closeAddGatoModal()
+        await loadPets({ selectLast: true })
+      })
+
+      loadPets()
     </script>
   </body>
 </html>
-
