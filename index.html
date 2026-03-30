@@ -46,16 +46,81 @@
         margin-bottom: 1.5rem;
       }
 
+      .avatar-carousel {
+        position: relative;
+        width: 220px;
+        margin: 0 auto 1rem;
+      }
+
       .avatar-wrap {
         position: relative;
         width: 220px;
         height: 220px;
-        margin: 0 auto 1rem;
         border-radius: 50%;
         border: 6px solid var(--gold);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         overflow: hidden;
         background: rgba(0, 0, 0, 0.18);
+      }
+
+      .avatar-nav {
+        position: absolute;
+        top: 50%;
+        z-index: 2;
+        width: 30px;
+        height: 30px;
+        border: none;
+        border-radius: 50%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        line-height: 1;
+        font-weight: 700;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.92);
+        background: rgba(0, 0, 0, 0.36);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+        opacity: 0.58;
+        transition: background 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+      }
+
+      .avatar-nav:hover {
+        opacity: 0.92;
+        background: rgba(0, 0, 0, 0.52);
+      }
+
+      .avatar-nav:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+        opacity: 0.95;
+      }
+
+      .avatar-nav--prev {
+        left: 0;
+        transform: translate(calc(-50% - 2px), -50%);
+      }
+
+      .avatar-nav--next {
+        right: 0;
+        transform: translate(calc(50% + 2px), -50%);
+      }
+
+      .avatar-nav--prev:hover {
+        transform: translate(calc(-50% - 2px), -50%) scale(1.05);
+      }
+
+      .avatar-nav--next:hover {
+        transform: translate(calc(50% + 2px), -50%) scale(1.05);
+      }
+
+      .avatar-nav--prev:active {
+        transform: translate(calc(-50% - 2px), -50%) scale(0.94);
+      }
+
+      .avatar-nav--next:active {
+        transform: translate(calc(50% + 2px), -50%) scale(0.94);
       }
 
       .avatar-wrap .avatar {
@@ -73,6 +138,7 @@
       .avatar-loading {
         position: absolute;
         inset: 0;
+        z-index: 4;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -367,12 +433,91 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+
+      /* Mobile: choose camera vs photo library */
+      .photo-source-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(3px);
+      }
+
+      .photo-source-backdrop.is-open {
+        display: flex;
+      }
+
+      .photo-source-sheet {
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+        padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0));
+        background: #f3f4f6;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+      }
+
+      .photo-source-title {
+        margin: 0 0 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-align: center;
+      }
+
+      .photo-source-sheet button {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 12px;
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.1s ease;
+      }
+
+      .photo-source-sheet button:last-child {
+        margin-bottom: 0;
+      }
+
+      .photo-source-sheet .photo-source-primary {
+        background: var(--blue);
+        color: var(--gold);
+      }
+
+      .photo-source-sheet .photo-source-primary:active {
+        transform: scale(0.99);
+      }
+
+      .photo-source-sheet .photo-source-secondary {
+        background: #e5e7eb;
+        color: #374151;
+      }
+
+      .photo-source-sheet .photo-source-secondary:active {
+        transform: scale(0.99);
+      }
+
+      .photo-source-sheet .photo-source-cancel {
+        background: transparent;
+        color: #6b7280;
+        font-weight: 500;
+        margin-top: 0.25rem;
+      }
     </style>
   </head>
   <body>
+    <input type="file" id="pet-photo-library" accept="image/*" hidden aria-hidden="true" />
     <input
       type="file"
-      id="pet-photo-input"
+      id="pet-photo-camera"
       accept="image/*"
       capture="environment"
       hidden
@@ -410,6 +555,21 @@
       </div>
     </div>
 
+    <div
+      class="photo-source-backdrop"
+      id="photo-source-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="photo-source-title"
+    >
+      <div class="photo-source-sheet" role="document">
+        <p class="photo-source-title" id="photo-source-title">Add photo</p>
+        <button type="button" class="photo-source-primary" id="photo-source-camera-btn">Take photo</button>
+        <button type="button" class="photo-source-secondary" id="photo-source-library-btn">Choose from library</button>
+        <button type="button" class="photo-source-cancel" id="photo-source-cancel-btn">Cancel</button>
+      </div>
+    </div>
+
     <div class="wrapper">
       <h1>PurrBox</h1>
 
@@ -433,8 +593,10 @@
       const supabase = createClient(supabaseUrl, supabaseKey)
 
       let pets = []
-      /** @type {Map<string | number, string>} pet id -> first pet_images row URL */
-      let avatarUrlByPetId = new Map()
+      /** @type {Map<string, string[]>} pet id -> ordered pet_images URLs */
+      let avatarUrlsByPetId = new Map()
+      /** @type {Map<string, number>} pet id -> current photo index in carousel */
+      let petPhotoSlideIndexByPetId = new Map()
       let currentIndex = 0
       let photoUploadInProgress = false
 
@@ -448,9 +610,31 @@
       const addGatoError = document.getElementById('add-gato-error')
       const addGatoSubmit = document.getElementById('add-gato-submit')
       const petCounter = document.getElementById('pet-counter')
-      const petPhotoInput = document.getElementById('pet-photo-input')
+      const petPhotoLibraryInput = document.getElementById('pet-photo-library')
+      const petPhotoCameraInput = document.getElementById('pet-photo-camera')
+      const photoSourceModal = document.getElementById('photo-source-modal')
+      const photoSourceCameraBtn = document.getElementById('photo-source-camera-btn')
+      const photoSourceLibraryBtn = document.getElementById('photo-source-library-btn')
+      const photoSourceCancelBtn = document.getElementById('photo-source-cancel-btn')
 
       const PET_IMAGES_BUCKET = 'pets_images'
+
+      function shouldOfferPhotoSourceChoice() {
+        const narrow = window.matchMedia('(max-width: 768px)').matches
+        const coarsePointer = window.matchMedia('(pointer: coarse)').matches
+        const touch = navigator.maxTouchPoints > 0
+        return narrow && (coarsePointer || touch)
+      }
+
+      function openPhotoSourceModal() {
+        photoSourceModal.classList.add('is-open')
+        photoSourceModal.setAttribute('aria-hidden', 'false')
+      }
+
+      function closePhotoSourceModal() {
+        photoSourceModal.classList.remove('is-open')
+        photoSourceModal.setAttribute('aria-hidden', 'true')
+      }
 
       const cameraIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`
 
@@ -492,7 +676,7 @@
         )
       }
 
-      function buildAvatarUrlMap(images) {
+      function buildAvatarUrlsMap(images) {
         const map = new Map()
         const byPet = new Map()
         for (const row of images || []) {
@@ -507,11 +691,41 @@
             const bi = b.id ?? 0
             return ai - bi
           })
-          const first = rows[0]
-          const u = urlFromPetImageRow(first)
-          if (u) map.set(petId, u)
+          const urls = []
+          for (const row of rows) {
+            const u = urlFromPetImageRow(row)
+            if (u) urls.push(u)
+          }
+          if (urls.length > 0) map.set(petId, urls)
         }
         return map
+      }
+
+      function getImageUrlListForPet(pet) {
+        const pid = String(pet.id)
+        const fromTable = avatarUrlsByPetId.get(pid)
+        if (fromTable && fromTable.length > 0) return fromTable
+        if (pet.image_url) return [pet.image_url]
+        return ['placeholder.jpg']
+      }
+
+      function getCurrentPhotoIndexForPet(pet) {
+        const pid = String(pet.id)
+        const urls = getImageUrlListForPet(pet)
+        if (urls.length === 0) return 0
+        let idx = petPhotoSlideIndexByPetId.get(pid)
+        if (idx == null) idx = 0
+        idx = Math.max(0, Math.min(idx, urls.length - 1))
+        petPhotoSlideIndexByPetId.set(pid, idx)
+        return idx
+      }
+
+      function cyclePetPhoto(pet, delta) {
+        const urls = getImageUrlListForPet(pet)
+        if (urls.length < 2) return
+        let idx = petPhotoSlideIndexByPetId.get(String(pet.id)) ?? 0
+        idx = (idx + delta + urls.length) % urls.length
+        petPhotoSlideIndexByPetId.set(String(pet.id), idx)
       }
 
       async function loadPets(options = {}) {
@@ -544,9 +758,9 @@
 
         if (imagesRes.error) {
           console.warn('pet_images:', imagesRes.error.message)
-          avatarUrlByPetId = new Map()
+          avatarUrlsByPetId = new Map()
         } else {
-          avatarUrlByPetId = buildAvatarUrlMap(imagesRes.data)
+          avatarUrlsByPetId = buildAvatarUrlsMap(imagesRes.data)
         }
 
         pets = data
@@ -560,31 +774,37 @@
         updateButtons()
       }
 
-      function avatarSrcForPet(pet) {
-        const fromTable = avatarUrlByPetId.get(String(pet.id))
-        if (fromTable) return fromTable
-        if (pet.image_url) return pet.image_url
-        return 'placeholder.jpg'
-      }
-
       function renderPet(index) {
         const pet = pets[index]
-        const src = avatarSrcForPet(pet)
+        const urls = getImageUrlListForPet(pet)
+        const photoIdx = getCurrentPhotoIndexForPet(pet)
+        const src = urls[photoIdx] ?? urls[0]
         const safeAlt = escapeHtml(pet.name)
         const ariaPhoto = escapeAttr(`Add photo for ${pet.name}`)
         const loadingOverlay = photoUploadInProgress
           ? `<div class="avatar-loading" aria-busy="true"><span class="avatar-loading-icon" role="img" aria-label="Loading">⏳</span></div>`
           : ''
         const camDisabled = photoUploadInProgress ? ' disabled' : ''
+        const showPhotoNav = urls.length > 1 && !photoUploadInProgress
+        const navPrev = showPhotoNav
+          ? `<button type="button" class="avatar-nav avatar-nav--prev" aria-label="Previous photo">‹</button>`
+          : ''
+        const navNext = showPhotoNav
+          ? `<button type="button" class="avatar-nav avatar-nav--next" aria-label="Next photo">›</button>`
+          : ''
         card.innerHTML = `
-          <div class="avatar-wrap">
-            <img
-              class="avatar"
-              src="${escapeAttr(src)}"
-              alt="${safeAlt}"
-              onerror="this.src='placeholder.jpg'"
-            />
-            ${loadingOverlay}
+          <div class="avatar-carousel">
+            ${navPrev}
+            <div class="avatar-wrap">
+              <img
+                class="avatar"
+                src="${escapeAttr(src)}"
+                alt="${safeAlt}"
+                onerror="this.src='placeholder.jpg'"
+              />
+              ${loadingOverlay}
+            </div>
+            ${navNext}
           </div>
           <div class="pet-name-row">
             <p class="pet-name">${escapeHtml(pet.name)}</p>
@@ -629,16 +849,53 @@
       })
 
       card.addEventListener('click', (e) => {
+        if (e.target.closest('.avatar-nav--prev')) {
+          e.preventDefault()
+          const pet = pets[currentIndex]
+          if (!pet) return
+          cyclePetPhoto(pet, -1)
+          renderPet(currentIndex)
+          return
+        }
+        if (e.target.closest('.avatar-nav--next')) {
+          e.preventDefault()
+          const pet = pets[currentIndex]
+          if (!pet) return
+          cyclePetPhoto(pet, 1)
+          renderPet(currentIndex)
+          return
+        }
         const trigger = e.target.closest('.pet-camera')
         if (!trigger || trigger.disabled) return
         e.preventDefault()
-        petPhotoInput.value = ''
-        petPhotoInput.click()
+        petPhotoLibraryInput.value = ''
+        petPhotoCameraInput.value = ''
+        if (shouldOfferPhotoSourceChoice()) {
+          openPhotoSourceModal()
+        } else {
+          petPhotoLibraryInput.click()
+        }
       })
 
-      petPhotoInput.addEventListener('change', async () => {
-        const file = petPhotoInput.files?.[0]
-        petPhotoInput.value = ''
+      photoSourceCameraBtn.addEventListener('click', () => {
+        closePhotoSourceModal()
+        petPhotoCameraInput.value = ''
+        petPhotoCameraInput.click()
+      })
+
+      photoSourceLibraryBtn.addEventListener('click', () => {
+        closePhotoSourceModal()
+        petPhotoLibraryInput.value = ''
+        petPhotoLibraryInput.click()
+      })
+
+      photoSourceCancelBtn.addEventListener('click', closePhotoSourceModal)
+
+      photoSourceModal.addEventListener('click', (e) => {
+        if (e.target === photoSourceModal) closePhotoSourceModal()
+      })
+
+      async function handlePetPhotoFile(file) {
         if (!file) return
         if (!file.type.startsWith('image/')) {
           alert('Please choose an image file.')
@@ -684,11 +941,25 @@
           return
         }
 
-        avatarUrlByPetId.set(String(pet.id), publicUrl)
+        const pid = String(pet.id)
+        let urls = avatarUrlsByPetId.has(pid) ? [...avatarUrlsByPetId.get(pid)] : []
+        if (urls.length === 0 && pet.image_url) urls = [pet.image_url]
+        urls.push(publicUrl)
+        avatarUrlsByPetId.set(pid, urls)
+        petPhotoSlideIndexByPetId.set(pid, urls.length - 1)
         photoUploadInProgress = false
         renderPet(currentIndex)
         updateButtons()
-      })
+      }
+
+      function onPetPhotoInputChange(e) {
+        const file = e.target.files?.[0]
+        e.target.value = ''
+        handlePetPhotoFile(file)
+      }
+
+      petPhotoLibraryInput.addEventListener('change', onPetPhotoInputChange)
+      petPhotoCameraInput.addEventListener('change', onPetPhotoInputChange)
 
       addGatoBtn.addEventListener('click', openAddGatoModal)
       addGatoCancel.addEventListener('click', closeAddGatoModal)
@@ -700,6 +971,9 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && addGatoModal.classList.contains('is-open')) {
           closeAddGatoModal()
+        }
+        if (e.key === 'Escape' && photoSourceModal.classList.contains('is-open')) {
+          closePhotoSourceModal()
         }
       })
 
